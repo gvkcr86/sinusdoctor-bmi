@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI Calculator — SinusDoctor</title>
+<meta name="description" content="Premium BMI calculator by SinusDoctor.">
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF8F3;
+    --navy: #0B1B33;
+    --navy-soft: #23375c;
+    --gold: #A8841C;
+    --gold-bright: #C9A227;
+    --text: #1C2A42;
+    --text-dim: rgba(28, 42, 66, 0.58);
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: rgba(201, 162, 39, 0.35);
+    --blue: #3E8FD0;
+    --green: #2FA872;
+    --amber: #D99A1B;
+    --red: #D64545;
+    --radius-lg: 24px;
+    --radius-md: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201, 162, 39, 0.10), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 100%, rgba(11, 27, 51, 0.05), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 5% 85%, rgba(201, 162, 39, 0.06), transparent 60%);
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 1rem clamp(1rem, 4vw, 2.5rem);
+    border-bottom: 1px solid rgba(201, 162, 39, 0.25);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .header-row img {
+    height: 48px;
+    width: auto;
+    flex-shrink: 0;
+  }
+  @media (max-width: 480px) {
+    .header-row img { height: 40px; }
+  }
+
+  /* ---------- Layout ---------- */
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(1.2rem, 4vw, 2.5rem) clamp(0.9rem, 4vw, 2rem) 2rem;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: clamp(1.2rem, 3vw, 2rem);
+  }
+  .page-title h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .page-title h2 .gold { color: var(--gold); }
+  .page-title p {
+    margin-top: 0.4rem;
+    color: var(--text-dim);
+    font-size: 0.92rem;
+  }
+
+  /* ---------- Glass card ---------- */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 24px 60px rgba(11, 27, 51, 0.10),
+      0 4px 16px rgba(11, 27, 51, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: clamp(1.3rem, 4vw, 2.2rem);
+  }
+
+  .inputs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.1rem, 3vw, 2rem);
+  }
+  @media (max-width: 620px) {
+    .inputs-grid { grid-template-columns: 1fr; }
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 0.65rem; }
+
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+  }
+
+  /* Segmented pill toggle */
+  .segmented {
+    display: inline-flex;
+    background: rgba(11, 27, 51, 0.06);
+    border: 1px solid rgba(11, 27, 51, 0.12);
+    border-radius: 999px;
+    padding: 3px;
+    position: relative;
+  }
+  .segmented button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.34rem 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    letter-spacing: 0.03em;
+  }
+  .segmented button.active {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(168, 132, 28, 0.35);
+  }
+  .segmented button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .input-row { display: flex; gap: 0.7rem; }
+  .input-wrap { position: relative; flex: 1; }
+  .input-wrap input {
+    width: 100%;
+    appearance: none;
+    background: #fff;
+    border: 1px solid rgba(11, 27, 51, 0.16);
+    border-radius: var(--radius-md);
+    color: var(--navy);
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding: 0.85rem 3rem 0.85rem 1rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .input-wrap input::-webkit-outer-spin-button,
+  .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .input-wrap input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  .input-wrap input:focus {
+    outline: none;
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+  }
+  .input-wrap input.invalid {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.12);
+  }
+  .unit-suffix {
+    position: absolute;
+    right: 0.95rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    letter-spacing: 0.05em;
+  }
+  .field-error {
+    font-size: 0.78rem;
+    color: var(--red);
+    min-height: 1.05rem;
+    line-height: 1.05rem;
+    transition: opacity 0.25s ease;
+    opacity: 0;
+  }
+  .field-error.show { opacity: 1; }
+
+  /* Set as default */
+  .defaults-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+  .btn-default {
+    appearance: none;
+    background: transparent;
+    border: 1px solid rgba(168, 132, 28, 0.5);
+    color: var(--gold);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.42rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  }
+  .btn-default:hover { background: rgba(201, 162, 39, 0.12); }
+  .btn-default:active { transform: scale(0.96); }
+  .btn-default:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* ---------- Results ---------- */
+  .results {
+    margin-top: clamp(1.4rem, 3vw, 2rem);
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+  }
+  .results.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.45), transparent);
+    margin-bottom: clamp(1.3rem, 3vw, 1.8rem);
+  }
+
+  .bmi-hero { text-align: center; }
+  .bmi-hero .bmi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+  }
+  .bmi-value {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(3.4rem, 12vw, 5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    margin-top: 0.2rem;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.4s ease;
+  }
+  .bmi-category {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0.3rem 1.1rem;
+    border-radius: 999px;
+    border: 1.5px solid currentColor;
+    transition: color 0.4s ease;
+  }
+
+  /* Scale bar */
+  .scale-wrap {
+    margin: clamp(1.4rem, 3vw, 1.9rem) auto 0;
+    max-width: 560px;
+  }
+  .scale-bar {
+    position: relative;
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+      var(--blue) 0%,
+      var(--blue) 21.25%,
+      var(--green) 23.75%,
+      var(--green) 51.25%,
+      var(--amber) 53.75%,
+      var(--amber) 71.25%,
+      var(--red) 73.75%,
+      var(--red) 100%);
+    box-shadow: inset 0 1px 3px rgba(11, 27, 51, 0.25);
+  }
+  .scale-marker {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--navy);
+    box-shadow: 0 2px 10px rgba(11, 27, 51, 0.3);
+    transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* Target cards */
+  .targets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(0.9rem, 2.5vw, 1.4rem);
+    margin-top: clamp(1.5rem, 3.5vw, 2.1rem);
+  }
+  @media (max-width: 620px) {
+    .targets { grid-template-columns: 1fr; }
+  }
+  .target-card {
+    background: #fff;
+    border: 1px solid rgba(11, 27, 51, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    box-shadow: 0 4px 14px rgba(11, 27, 51, 0.06);
+  }
+  .target-card h3 {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    line-height: 1.45;
+  }
+  .target-weight {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.7rem, 5vw, 2.1rem);
+    font-weight: 700;
+    color: var(--navy);
+    font-variant-numeric: tabular-nums;
+  }
+  .target-weight .unit {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-left: 0.2rem;
+  }
+  .target-delta {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+  .target-delta.ok { color: var(--green); font-weight: 600; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 2rem;
+    transform: translate(-50%, 16px);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(168, 132, 28, 0.5);
+    color: var(--navy);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.65rem 1.4rem;
+    border-radius: 999px;
+    box-shadow: 0 8px 30px rgba(11, 27, 51, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .tick { color: var(--gold); margin-right: 0.35rem; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid rgba(201, 162, 39, 0.25);
+    padding: 1.4rem 1rem 1.8rem;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.8;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  footer a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+  }
+  footer a:hover { color: var(--gold-bright); text-decoration: underline; }
+  .footer-disclaimer { max-width: 480px; margin: 0 auto 0.35rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <img src="assets/logo.png" alt="SinusDoctor logo">
+  </div>
+</header>
+
+<main>
+  <div class="page-title">
+    <h2>Body Mass Index <span class="gold">Calculator</span></h2>
+    <p>Enter your height and weight — results update instantly.</p>
+  </div>
+
+  <div class="card">
+    <div class="inputs-grid">
+      <!-- Height -->
+      <div class="field-group">
+        <div class="field-label-row">
+          <span class="field-label">Height</span>
+          <div class="segmented" role="group" aria-label="Height unit">
+            <button type="button" id="btn-cm" class="active">cm</button>
+            <button type="button" id="btn-ftin">ft + in</button>
+          </div>
+        </div>
+        <div class="input-row" id="height-cm-row">
+          <div class="input-wrap">
+            <input type="number" id="height-cm" inputmode="decimal" placeholder="170" min="0" step="0.1" aria-label="Height in centimetres">
+            <span class="unit-suffix">cm</span>
+          </div>
+        </div>
+        <div class="input-row" id="height-ftin-row" style="display:none">
+          <div class="input-wrap">
+            <input type="number" id="height-ft" inputmode="numeric" placeholder="5" min="0" step="1" aria-label="Height feet">
+            <span class="unit-suffix">ft</span>
+          </div>
+          <div class="input-wrap">
+            <input type="number" id="height-in" inputmode="decimal" placeholder="7" min="0" step="0.5" aria-label="Height inches">
+            <span class="unit-suffix">in</span>
+          </div>
+        </div>
+        <div class="field-error" id="height-error"></div>
+      </div>
+
+      <!-- Weight -->
+      <div class="field-group">
+        <div class="field-label-row">
+          <span class="field-label">Weight</span>
+          <div class="segmented" role="group" aria-label="Weight unit">
+            <button type="button" id="btn-kg" class="active">kg</button>
+            <button type="button" id="btn-lbs">lbs</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-wrap">
+            <input type="number" id="weight" inputmode="decimal" placeholder="70" min="0" step="0.1" aria-label="Weight">
+            <span class="unit-suffix" id="weight-suffix">kg</span>
+          </div>
+        </div>
+        <div class="field-error" id="weight-error"></div>
+      </div>
+    </div>
+
+    <div class="defaults-row">
+      <button type="button" class="btn-default" id="btn-save-defaults">Set current units as default</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results" aria-live="polite">
+      <div class="divider"></div>
+
+      <div class="bmi-hero">
+        <div class="bmi-label">Your BMI</div>
+        <div class="bmi-value" id="bmi-value">—</div>
+        <div class="bmi-category" id="bmi-category">—</div>
+      </div>
+
+      <div class="scale-wrap">
+        <div class="scale-bar">
+          <div class="scale-marker" id="scale-marker"></div>
+        </div>
+        <div class="scale-labels">
+          <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
+        </div>
+      </div>
+
+      <div class="targets">
+        <div class="target-card">
+          <h3>Weight at BMI 25<br>(upper healthy limit)</h3>
+          <div class="target-weight"><span id="target25-weight">—</span><span class="unit" id="target25-unit">kg</span></div>
+          <div class="target-delta" id="target25-delta"></div>
+        </div>
+        <div class="target-card">
+          <h3>Weight at BMI 20<br>(lean target)</h3>
+          <div class="target-weight"><span id="target20-weight">—</span><span class="unit" id="target20-unit">kg</span></div>
+          <div class="target-delta" id="target20-delta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-disclaimer">BMI is a screening tool, not a diagnosis. Consult your doctor for personalised advice.</div>
+  <a href="https://www.sinusdoctor.com" target="_blank" rel="noopener">sinusdoctor.com</a>
+  <div>Copyright © 2026 SinusDoctor</div>
+</footer>
+
+<div class="toast" id="toast"><span class="tick">✓</span>Defaults saved</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS_KEY = 'sinusdoctor-bmi-units';
+
+  var els = {
+    btnCm: document.getElementById('btn-cm'),
+    btnFtin: document.getElementById('btn-ftin'),
+    btnKg: document.getElementById('btn-kg'),
+    btnLbs: document.getElementById('btn-lbs'),
+    cmRow: document.getElementById('height-cm-row'),
+    ftinRow: document.getElementById('height-ftin-row'),
+    cm: document.getElementById('height-cm'),
+    ft: document.getElementById('height-ft'),
+    inch: document.getElementById('height-in'),
+    weight: document.getElementById('weight'),
+    weightSuffix: document.getElementById('weight-suffix'),
+    heightError: document.getElementById('height-error'),
+    weightError: document.getElementById('weight-error'),
+    results: document.getElementById('results'),
+    bmiValue: document.getElementById('bmi-value'),
+    bmiCategory: document.getElementById('bmi-category'),
+    marker: document.getElementById('scale-marker'),
+    t25w: document.getElementById('target25-weight'),
+    t25u: document.getElementById('target25-unit'),
+    t25d: document.getElementById('target25-delta'),
+    t20w: document.getElementById('target20-weight'),
+    t20u: document.getElementById('target20-unit'),
+    t20d: document.getElementById('target20-delta'),
+    saveBtn: document.getElementById('btn-save-defaults'),
+    toast: document.getElementById('toast')
+  };
+
+  var heightUnit = 'cm';   // 'cm' | 'ftin'
+  var weightUnit = 'kg';   // 'kg' | 'lbs'
+  var lastBmi = null;      // for count-up animation
+  var toastTimer = null;
+
+  // Load saved unit defaults
+  try {
+    var saved = JSON.parse(localStorage.getItem(LS_KEY));
+    if (saved) {
+      if (saved.height === 'ftin') heightUnit = 'ftin';
+      if (saved.weight === 'lbs') weightUnit = 'lbs';
+    }
+  } catch (e) { /* corrupted value — ignore */ }
+
+  function applyUnitUI() {
+    els.btnCm.classList.toggle('active', heightUnit === 'cm');
+    els.btnFtin.classList.toggle('active', heightUnit === 'ftin');
+    els.cmRow.style.display = heightUnit === 'cm' ? '' : 'none';
+    els.ftinRow.style.display = heightUnit === 'ftin' ? '' : 'none';
+    els.btnKg.classList.toggle('active', weightUnit === 'kg');
+    els.btnLbs.classList.toggle('active', weightUnit === 'lbs');
+    els.weightSuffix.textContent = weightUnit;
+    els.t25u.textContent = ' ' + weightUnit;
+    els.t20u.textContent = ' ' + weightUnit;
+  }
+
+  function setHeightUnit(u) {
+    if (heightUnit === u) return;
+    // Convert existing value across units so user doesn't retype
+    if (u === 'ftin') {
+      var cmVal = parseFloat(els.cm.value);
+      if (isFinite(cmVal) && cmVal > 0) {
+        var totalIn = cmVal / 2.54;
+        els.ft.value = Math.floor(totalIn / 12);
+        els.inch.value = (Math.round((totalIn % 12) * 2) / 2).toString();
+      }
+    } else {
+      var ftVal = parseFloat(els.ft.value) || 0;
+      var inVal = parseFloat(els.inch.value) || 0;
+      if (ftVal > 0 || inVal > 0) {
+        els.cm.value = (Math.round((ftVal * 30.48 + inVal * 2.54) * 10) / 10).toString();
+      }
+    }
+    heightUnit = u;
+    applyUnitUI();
+    recalc();
+  }
+
+  function setWeightUnit(u) {
+    if (weightUnit === u) return;
+    var w = parseFloat(els.weight.value);
+    if (isFinite(w) && w > 0) {
+      els.weight.value = (Math.round((u === 'lbs' ? w / 0.45359237 : w * 0.45359237) * 10) / 10).toString();
+    }
+    weightUnit = u;
+    applyUnitUI();
+    recalc();
+  }
+
+  function getHeightCm() {
+    if (heightUnit === 'cm') {
+      var v = parseFloat(els.cm.value);
+      return isFinite(v) ? v : null;
+    }
+    var ft = els.ft.value === '' ? null : parseFloat(els.ft.value);
+    var inch = els.inch.value === '' ? 0 : parseFloat(els.inch.value);
+    if (ft === null && els.inch.value === '') return null;
+    if (!isFinite(ft)) ft = 0;
+    if (!isFinite(inch)) inch = 0;
+    return ft * 30.48 + inch * 2.54;
+  }
+
+  function getWeightKg() {
+    var v = parseFloat(els.weight.value);
+    if (!isFinite(v)) return null;
+    return weightUnit === 'lbs' ? v * 0.45359237 : v;
+  }
+
+  function kgToDisplay(kg) {
+    return weightUnit === 'lbs' ? kg / 0.45359237 : kg;
+  }
+
+  function setError(el, inputs, msg) {
+    el.textContent = msg || '';
+    el.classList.toggle('show', !!msg);
+    inputs.forEach(function (i) { i.classList.toggle('invalid', !!msg); });
+  }
+
+  function categoryFor(bmi) {
+    if (bmi < 18.5) return { label: 'Underweight', color: 'var(--blue)' };
+    if (bmi < 25)   return { label: 'Normal', color: 'var(--green)' };
+    if (bmi < 30)   return { label: 'Overweight', color: 'var(--amber)' };
+    return { label: 'Obese', color: 'var(--red)' };
+  }
+
+  // Count-up animation for the BMI number
+  function animateBmi(from, to) {
+    var duration = 550;
+    var start = performance.now();
+    function frame(now) {
+      var t = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      els.bmiValue.textContent = (from + (to - from) * eased).toFixed(1);
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function fmt1(n) {
+    return (Math.round(n * 10) / 10).toFixed(1);
+  }
+
+  function recalc() {
+    var hCm = getHeightCm();
+    var wKg = getWeightKg();
+
+    var heightEntered = hCm !== null;
+    var weightEntered = wKg !== null;
+
+    var heightValid = heightEntered && hCm >= 100 && hCm <= 250;
+    var weightValid = weightEntered && wKg >= 20 && wKg <= 300;
+
+    var hInputs = heightUnit === 'cm' ? [els.cm] : [els.ft, els.inch];
+    setError(els.heightError, hInputs,
+      heightEntered && !heightValid ? 'Please enter a height between 100 and 250 cm (3\'3"–8\'2").' : '');
+    setError(els.weightError, [els.weight],
+      weightEntered && !weightValid ? 'Please enter a weight between 20 and 300 kg (44–661 lbs).' : '');
+
+    if (!heightValid || !weightValid) {
+      els.results.classList.remove('visible');
+      lastBmi = null;
+      return;
+    }
+
+    var m = hCm / 100;
+    var bmi = wKg / (m * m);
+    var cat = categoryFor(bmi);
+
+    var wasVisible = els.results.classList.contains('visible');
+    els.results.classList.add('visible');
+
+    if (lastBmi !== null && wasVisible) {
+      animateBmi(lastBmi, bmi);
+    } else {
+      animateBmi(Math.max(bmi - 4, 0), bmi);
+    }
+    lastBmi = bmi;
+
+    els.bmiValue.style.color = cat.color;
+    els.bmiCategory.textContent = cat.label;
+    els.bmiCategory.style.color = cat.color;
+
+    // Scale bar spans BMI 15–40
+    var pct = Math.min(Math.max((bmi - 15) / 25, 0), 1) * 100;
+    els.marker.style.left = pct + '%';
+
+    // Target weights (computed in kg, displayed in selected unit)
+    var w25kg = 25 * m * m;
+    var w20kg = 20 * m * m;
+    var w25disp = kgToDisplay(w25kg);
+    var w20disp = kgToDisplay(w20kg);
+    var wDisp = kgToDisplay(wKg);
+
+    els.t25w.textContent = fmt1(w25disp);
+    els.t20w.textContent = fmt1(w20disp);
+
+    var d25 = wDisp - w25disp;
+    if (d25 > 0.05) {
+      els.t25d.textContent = 'Reduce ' + fmt1(d25) + ' ' + weightUnit;
+      els.t25d.classList.remove('ok');
+    } else {
+      els.t25d.textContent = 'You are within this target';
+      els.t25d.classList.add('ok');
+    }
+
+    var d20 = wDisp - w20disp;
+    if (Math.abs(d20) <= 0.2) {
+      els.t20d.textContent = 'You are at this target';
+      els.t20d.classList.add('ok');
+    } else if (d20 > 0) {
+      els.t20d.textContent = 'Reduce ' + fmt1(d20) + ' ' + weightUnit;
+      els.t20d.classList.remove('ok');
+    } else {
+      els.t20d.textContent = 'You are below this target';
+      els.t20d.classList.add('ok');
+    }
+  }
+
+  function saveDefaults() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ height: heightUnit, weight: weightUnit }));
+    } catch (e) { /* private mode — nothing to do */ }
+    els.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2200);
+  }
+
+  els.btnCm.addEventListener('click', function () { setHeightUnit('cm'); });
+  els.btnFtin.addEventListener('click', function () { setHeightUnit('ftin'); });
+  els.btnKg.addEventListener('click', function () { setWeightUnit('kg'); });
+  els.btnLbs.addEventListener('click', function () { setWeightUnit('lbs'); });
+  els.saveBtn.addEventListener('click', saveDefaults);
+
+  [els.cm, els.ft, els.inch, els.weight].forEach(function (input) {
+    input.addEventListener('input', recalc);
+  });
+
+  applyUnitUI();
+})();
+</script>
+</body>
+</html>
