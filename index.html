@@ -888,8 +888,8 @@
     var lines = [
       'Your BMI Report — SinusDoctor',
       '',
-      'BMI: ' + r.bmi.toFixed(1) + ' (' + r.catLabel + ')',
-      'Current weight: ' + fmt1(r.wDisp) + ' ' + weightUnit,
+      '*BMI*: ' + r.bmi.toFixed(1) + ' (' + r.catLabel + ')',
+      '*Current weight* : ' + fmt1(r.wDisp) + ' ' + weightUnit,
       '',
       'Weight at BMI 25 (upper healthy limit): ' + fmt1(r.w25disp) + ' ' + weightUnit
     ];
@@ -903,8 +903,9 @@
     else if (d20 > 0) lines.push('→ Reduce ' + fmt1(d20) + ' ' + weightUnit + ' to reach this lean target');
     else lines.push('→ You are below this target');
     lines.push('');
-    lines.push('Calculate yours: https://gvkcr86.github.io/sinusdoctor-bmi/');
     lines.push('BMI is a screening tool, not a diagnosis.');
+    lines.push('');
+    lines.push('📖 Do read *The Sinus Book* — now available on Amazon: www.thesinusbook.com');
     return lines.join('\n');
   }
 
