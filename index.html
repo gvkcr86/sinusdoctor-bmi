@@ -395,6 +395,66 @@
   }
   .target-delta.ok { color: var(--green); font-weight: 600; }
 
+  /* Share with patient */
+  .share-section {
+    margin-top: clamp(1.5rem, 3.5vw, 2.1rem);
+    background: #fff;
+    border: 1px solid rgba(11, 27, 51, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.2rem 1.25rem;
+    box-shadow: 0 4px 14px rgba(11, 27, 51, 0.06);
+  }
+  .share-section h3 {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+  }
+  .share-row {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+  .share-row .input-wrap { min-width: 200px; }
+  .share-row input {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  .share-buttons {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .btn-share {
+    appearance: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.75rem 1.3rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.25s ease;
+    white-space: nowrap;
+  }
+  .btn-share:active { transform: scale(0.97); }
+  .btn-wa {
+    background: #25D366;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(37, 211, 102, 0.35);
+  }
+  .btn-wa:hover { background: #1fbd5a; }
+  .btn-img {
+    background: transparent;
+    border: 1px solid rgba(168, 132, 28, 0.5);
+    color: var(--gold);
+  }
+  .btn-img:hover { background: rgba(201, 162, 39, 0.12); }
+  .btn-share:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
   /* Toast */
   .toast {
     position: fixed;
@@ -531,15 +591,29 @@
 
       <div class="targets">
         <div class="target-card">
-          <h3>Weight at BMI 25<br>(upper healthy limit)</h3>
+          <h3>Weight at BMI 25 — Upper Healthy Limit</h3>
           <div class="target-weight"><span id="target25-weight">—</span><span class="unit" id="target25-unit">kg</span></div>
           <div class="target-delta" id="target25-delta"></div>
         </div>
         <div class="target-card">
-          <h3>Weight at BMI 20<br>(lean target)</h3>
+          <h3>Weight at BMI 20 — Lean Target</h3>
           <div class="target-weight"><span id="target20-weight">—</span><span class="unit" id="target20-unit">kg</span></div>
           <div class="target-delta" id="target20-delta"></div>
         </div>
+      </div>
+
+      <div class="share-section">
+        <h3>Send report to patient on WhatsApp</h3>
+        <div class="share-row">
+          <div class="input-wrap">
+            <input type="tel" id="patient-mobile" inputmode="tel" placeholder="Patient mobile e.g. 98490 12345" aria-label="Patient WhatsApp number">
+          </div>
+          <div class="share-buttons">
+            <button type="button" class="btn-share btn-wa" id="btn-wa-send">Send on WhatsApp</button>
+            <button type="button" class="btn-share btn-img" id="btn-img-share">Share result image</button>
+          </div>
+        </div>
+        <div class="field-error" id="mobile-error"></div>
       </div>
     </div>
   </div>
@@ -584,13 +658,18 @@
     t20u: document.getElementById('target20-unit'),
     t20d: document.getElementById('target20-delta'),
     saveBtn: document.getElementById('btn-save-defaults'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    mobile: document.getElementById('patient-mobile'),
+    mobileError: document.getElementById('mobile-error'),
+    waBtn: document.getElementById('btn-wa-send'),
+    imgBtn: document.getElementById('btn-img-share')
   };
 
   var heightUnit = 'cm';   // 'cm' | 'ftin'
   var weightUnit = 'kg';   // 'kg' | 'lbs'
   var lastBmi = null;      // for count-up animation
   var toastTimer = null;
+  var lastReport = null;   // snapshot of current result for WhatsApp/image share
 
   // Load saved unit defaults
   try {
@@ -718,6 +797,7 @@
     if (!heightValid || !weightValid) {
       els.results.classList.remove('visible');
       lastBmi = null;
+      lastReport = null;
       return;
     }
 
@@ -755,19 +835,30 @@
 
     var d25 = wDisp - w25disp;
     if (d25 > 0.05) {
-      els.t25d.textContent = 'Reduce ' + fmt1(d25) + ' ' + weightUnit;
+      els.t25d.textContent = 'Reduce ' + fmt1(d25) + ' ' + weightUnit + ' to reach the healthy range';
       els.t25d.classList.remove('ok');
     } else {
-      els.t25d.textContent = 'You are within this target';
+      els.t25d.textContent = 'You are within the healthy range';
       els.t25d.classList.add('ok');
     }
+
+    lastReport = {
+      bmi: bmi,
+      catLabel: cat.label,
+      catColor: cat.color,
+      pct: pct,
+      wDisp: wDisp,
+      w25disp: w25disp,
+      w20disp: w20disp,
+      hCm: hCm
+    };
 
     var d20 = wDisp - w20disp;
     if (Math.abs(d20) <= 0.2) {
       els.t20d.textContent = 'You are at this target';
       els.t20d.classList.add('ok');
     } else if (d20 > 0) {
-      els.t20d.textContent = 'Reduce ' + fmt1(d20) + ' ' + weightUnit;
+      els.t20d.textContent = 'Reduce ' + fmt1(d20) + ' ' + weightUnit + ' to reach this lean target';
       els.t20d.classList.remove('ok');
     } else {
       els.t20d.textContent = 'You are below this target';
@@ -783,6 +874,142 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { els.toast.classList.remove('show'); }, 2200);
   }
+
+  /* ---------- Share with patient ---------- */
+
+  function normalizeMobile(raw) {
+    var digits = raw.replace(/\D/g, '').replace(/^0+/, '');
+    if (digits.length === 10) digits = '91' + digits; // assume India for 10-digit numbers
+    return digits.length >= 11 && digits.length <= 15 ? digits : null;
+  }
+
+  function buildReportText() {
+    var r = lastReport;
+    var lines = [
+      'Your BMI Report — SinusDoctor',
+      '',
+      'BMI: ' + r.bmi.toFixed(1) + ' (' + r.catLabel + ')',
+      'Current weight: ' + fmt1(r.wDisp) + ' ' + weightUnit,
+      '',
+      'Weight at BMI 25 (upper healthy limit): ' + fmt1(r.w25disp) + ' ' + weightUnit
+    ];
+    var d25 = r.wDisp - r.w25disp;
+    lines.push(d25 > 0.05 ? '→ Reduce ' + fmt1(d25) + ' ' + weightUnit + ' to reach the healthy range'
+                          : '→ You are within the healthy range');
+    lines.push('');
+    lines.push('Weight at BMI 20 (lean target): ' + fmt1(r.w20disp) + ' ' + weightUnit);
+    var d20 = r.wDisp - r.w20disp;
+    if (Math.abs(d20) <= 0.2) lines.push('→ You are at this target');
+    else if (d20 > 0) lines.push('→ Reduce ' + fmt1(d20) + ' ' + weightUnit + ' to reach this lean target');
+    else lines.push('→ You are below this target');
+    lines.push('');
+    lines.push('Calculate yours: https://gvkcr86.github.io/sinusdoctor-bmi/');
+    lines.push('BMI is a screening tool, not a diagnosis.');
+    return lines.join('\n');
+  }
+
+  function sendWhatsApp() {
+    if (!lastReport) { setError(els.mobileError, [], 'Enter height and weight first.'); return; }
+    var num = normalizeMobile(els.mobile.value);
+    if (!num) {
+      setError(els.mobileError, [els.mobile], 'Enter a valid mobile number (10 digits, or full number with country code).');
+      return;
+    }
+    setError(els.mobileError, [els.mobile], '');
+    window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(buildReportText()), '_blank');
+  }
+
+  // Draws the result card onto a canvas and shares/downloads it as a PNG.
+  function shareImage() {
+    if (!lastReport) { setError(els.mobileError, [], 'Enter height and weight first.'); return; }
+    setError(els.mobileError, [els.mobile], '');
+    var r = lastReport;
+    var W = 1080, H = 1080;
+    var canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    var ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#FAF8F3';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(201,162,39,0.5)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(30, 30, W - 60, H - 60);
+
+    var colors = { blue: '#3E8FD0', green: '#2FA872', amber: '#D99A1B', red: '#D64545' };
+    var catHex = r.catLabel === 'Underweight' ? colors.blue : r.catLabel === 'Normal' ? colors.green : r.catLabel === 'Overweight' ? colors.amber : colors.red;
+
+    function centerText(text, y, font, color) {
+      ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(text, W / 2, y);
+    }
+
+    function drawBody() {
+      centerText('YOUR BMI REPORT', 210, '600 30px Inter, sans-serif', 'rgba(28,42,66,0.6)');
+      centerText(r.bmi.toFixed(1), 370, '700 150px "Playfair Display", Georgia, serif', catHex);
+      centerText(r.catLabel, 430, '600 40px Inter, sans-serif', catHex);
+
+      // Scale bar (BMI 15–40)
+      var bx = 190, bw = W - 380, by = 500, bh = 16;
+      var grad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+      grad.addColorStop(0, colors.blue); grad.addColorStop(0.21, colors.blue);
+      grad.addColorStop(0.24, colors.green); grad.addColorStop(0.51, colors.green);
+      grad.addColorStop(0.54, colors.amber); grad.addColorStop(0.71, colors.amber);
+      grad.addColorStop(0.74, colors.red); grad.addColorStop(1, colors.red);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, 8);
+      ctx.fill();
+      var mx = bx + bw * r.pct / 100;
+      ctx.beginPath();
+      ctx.arc(mx, by + bh / 2, 16, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#0B1B33';
+      ctx.stroke();
+
+      centerText('Current weight: ' + fmt1(r.wDisp) + ' ' + weightUnit, 610, '600 34px Inter, sans-serif', '#0B1B33');
+
+      var d25 = r.wDisp - r.w25disp;
+      centerText('Weight at BMI 25 (upper healthy limit): ' + fmt1(r.w25disp) + ' ' + weightUnit, 690, '500 30px Inter, sans-serif', 'rgba(28,42,66,0.75)');
+      centerText(d25 > 0.05 ? 'Reduce ' + fmt1(d25) + ' ' + weightUnit + ' to reach the healthy range' : 'You are within the healthy range', 735, '600 30px Inter, sans-serif', d25 > 0.05 ? '#A8841C' : colors.green);
+
+      var d20 = r.wDisp - r.w20disp;
+      centerText('Weight at BMI 20 (lean target): ' + fmt1(r.w20disp) + ' ' + weightUnit, 815, '500 30px Inter, sans-serif', 'rgba(28,42,66,0.75)');
+      var d20text = Math.abs(d20) <= 0.2 ? 'You are at this target' : d20 > 0 ? 'Reduce ' + fmt1(d20) + ' ' + weightUnit + ' to reach this lean target' : 'You are below this target';
+      centerText(d20text, 860, '600 30px Inter, sans-serif', d20 > 0.2 ? '#A8841C' : colors.green);
+
+      centerText('sinusdoctor.com', 950, '600 28px Inter, sans-serif', '#A8841C');
+      centerText('BMI is a screening tool, not a diagnosis.', 995, '400 22px Inter, sans-serif', 'rgba(28,42,66,0.55)');
+
+      canvas.toBlob(function (blob) {
+        var file = new File([blob], 'bmi-report.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: 'BMI Report' }).catch(function () { /* user cancelled */ });
+        } else {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'bmi-report.png';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+      }, 'image/png');
+    }
+
+    var logo = new Image();
+    logo.onload = function () {
+      var lh = 90, lw = logo.width * (lh / logo.height);
+      ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh);
+      drawBody();
+    };
+    logo.onerror = drawBody;
+    logo.src = 'assets/logo.png';
+  }
+
+  els.waBtn.addEventListener('click', sendWhatsApp);
+  els.imgBtn.addEventListener('click', shareImage);
 
   els.btnCm.addEventListener('click', function () { setHeightUnit('cm'); });
   els.btnFtin.addEventListener('click', function () { setHeightUnit('ftin'); });
