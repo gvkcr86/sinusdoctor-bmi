@@ -660,6 +660,9 @@
         <h3>Send report to patient on WhatsApp</h3>
         <div class="share-row">
           <div class="input-wrap">
+            <input type="text" id="patient-name" placeholder="Patient name (optional)" aria-label="Patient name">
+          </div>
+          <div class="input-wrap">
             <input type="tel" id="patient-mobile" inputmode="tel" placeholder="Patient mobile e.g. 98490 12345" aria-label="Patient WhatsApp number">
           </div>
           <div class="share-buttons">
@@ -714,13 +717,14 @@
     saveBtn: document.getElementById('btn-save-defaults'),
     toast: document.getElementById('toast'),
     adviceWeight: document.getElementById('advice-weight'),
+    patientName: document.getElementById('patient-name'),
     mobile: document.getElementById('patient-mobile'),
     mobileError: document.getElementById('mobile-error'),
     waBtn: document.getElementById('btn-wa-send'),
     imgBtn: document.getElementById('btn-img-share')
   };
 
-  var heightUnit = 'cm';   // 'cm' | 'ftin'
+  var heightUnit = 'ftin'; // 'cm' | 'ftin'
   var weightUnit = 'kg';   // 'kg' | 'lbs'
   var lastBmi = null;      // for count-up animation
   var toastTimer = null;
@@ -730,7 +734,7 @@
   try {
     var saved = JSON.parse(localStorage.getItem(LS_KEY));
     if (saved) {
-      if (saved.height === 'ftin') heightUnit = 'ftin';
+      if (saved.height === 'cm') heightUnit = 'cm';
       if (saved.weight === 'lbs') weightUnit = 'lbs';
     }
   } catch (e) { /* corrupted value — ignore */ }
@@ -960,11 +964,13 @@
 
   function buildReportText() {
     var r = lastReport;
+    var name = els.patientName.value.trim();
     var lines = [
+      name ? 'Dear ' + name + ',' : null,
       'Your BMI Report — SinusDoctor',
       '',
-      '*BMI*: ' + r.bmi.toFixed(1) + ' (' + r.catLabel + ')',
-      '*Current weight* : ' + fmt1(r.wDisp) + ' ' + weightUnit,
+      '*Your BMI:* ' + r.bmi.toFixed(1) + ' (' + r.catLabel + ')',
+      '*Your current weight:* ' + fmt1(r.wDisp) + ' ' + weightUnit,
       '',
       'Weight at BMI 25 (upper healthy limit): ' + fmt1(r.w25disp) + ' ' + weightUnit
     ];
@@ -987,12 +993,16 @@
     lines.push('5. Avoid sleeping pills or sedatives unless your doctor has reviewed your snoring');
     lines.push('6. ' + (p.amount ? p.amount + p.rest : p.rest));
     lines.push('');
-    lines.push('A sleep study is advised to check for sleep apnea — it decides the right treatment.');
+    lines.push('*Why a sleep study?*');
+    lines.push('• Tells simple snoring apart from sleep apnea (OSA)');
+    lines.push('• Measures how often breathing pauses and how low oxygen drops');
+    lines.push('• Untreated OSA raises blood pressure, heart, stroke and diabetes risk');
+    lines.push('• The result decides the right treatment for you');
     lines.push('');
     lines.push('BMI is a screening tool, not a diagnosis.');
     lines.push('');
-    lines.push('📖 Do read *The Sinus Book* — now available on Amazon: www.thesinusbook.com');
-    return lines.join('\n');
+    lines.push('Do read *The Sinus Book* — now available on Amazon: www.thesinusbook.com');
+    return lines.filter(function (l) { return l !== null; }).join('\n');
   }
 
   function sendWhatsApp() {
