@@ -395,6 +395,36 @@
   }
   .target-delta.ok { color: var(--green); font-weight: 600; }
 
+  /* Advice + sleep study */
+  .info-card {
+    margin-top: clamp(1.5rem, 3.5vw, 2.1rem);
+    background: #fff;
+    border: 1px solid rgba(11, 27, 51, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.3rem 1.3rem;
+    box-shadow: 0 4px 14px rgba(11, 27, 51, 0.06);
+  }
+  .info-card h3 {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 0.7rem;
+  }
+  .info-card ol {
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .info-card li {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .info-card li strong { color: var(--gold); }
+
   /* Share with patient */
   .share-section {
     margin-top: clamp(1.5rem, 3.5vw, 2.1rem);
@@ -602,6 +632,30 @@
         </div>
       </div>
 
+      <div class="info-card">
+        <h3>Lifestyle Advice for Snoring</h3>
+        <ol>
+          <li>Sleep on your side — keep a pillow behind your back so you don't roll onto your back</li>
+          <li>Stop smoking; avoid alcohol, especially within 3 hours of bedtime</li>
+          <li>Finish dinner at least 3 hours before sleep; keep dinner your lightest meal</li>
+          <li>Exercise 45 minutes daily</li>
+          <li>Avoid sleeping pills or sedatives unless your doctor has reviewed your snoring</li>
+          <li id="advice-weight"></li>
+        </ol>
+      </div>
+
+      <div class="info-card">
+        <h3>Why a Sleep Study?</h3>
+        <ol>
+          <li>Tells simple snoring apart from obstructive sleep apnea (OSA) — sound alone cannot</li>
+          <li>Measures severity: how often breathing pauses (AHI) and how low oxygen drops</li>
+          <li>Untreated OSA raises the risk of high blood pressure, heart disease, stroke and diabetes</li>
+          <li>Daytime sleepiness from OSA causes road and workplace accidents</li>
+          <li>The result decides the right treatment — weight loss, device (CPAP/oral appliance), or surgery</li>
+          <li>Gives a baseline to confirm treatment actually worked</li>
+        </ol>
+      </div>
+
       <div class="share-section">
         <h3>Send report to patient on WhatsApp</h3>
         <div class="share-row">
@@ -659,6 +713,7 @@
     t20d: document.getElementById('target20-delta'),
     saveBtn: document.getElementById('btn-save-defaults'),
     toast: document.getElementById('toast'),
+    adviceWeight: document.getElementById('advice-weight'),
     mobile: document.getElementById('patient-mobile'),
     mobileError: document.getElementById('mobile-error'),
     waBtn: document.getElementById('btn-wa-send'),
@@ -842,6 +897,8 @@
       els.t25d.classList.add('ok');
     }
 
+    var w185disp = kgToDisplay(18.5 * m * m);
+
     lastReport = {
       bmi: bmi,
       catLabel: cat.label,
@@ -850,8 +907,11 @@
       wDisp: wDisp,
       w25disp: w25disp,
       w20disp: w20disp,
+      w185disp: w185disp,
       hCm: hCm
     };
+
+    els.adviceWeight.innerHTML = adviceWeightHTML();
 
     var d20 = wDisp - w20disp;
     if (Math.abs(d20) <= 0.2) {
@@ -883,6 +943,21 @@
     return digits.length >= 11 && digits.length <= 15 ? digits : null;
   }
 
+  // Weight advice keyed to the ideal range (BMI 18.5–25 for the patient's height)
+  function adviceWeightParts() {
+    var r = lastReport;
+    var range = fmt1(r.w185disp) + '–' + fmt1(r.w25disp) + ' ' + weightUnit;
+    var d25 = r.wDisp - r.w25disp;
+    if (d25 > 0.05) return { amount: 'Reduce ' + fmt1(d25) + ' ' + weightUnit, rest: ' to reach your ideal weight range (' + range + ')' };
+    if (r.wDisp < r.w185disp - 0.05) return { amount: '', rest: 'You are below your ideal weight range (' + range + ') — discuss weight gain with your doctor' };
+    return { amount: '', rest: 'Maintain your weight within your ideal range (' + range + ')' };
+  }
+
+  function adviceWeightHTML() {
+    var p = adviceWeightParts();
+    return p.amount ? '<strong>' + p.amount + '</strong>' + p.rest : p.rest;
+  }
+
   function buildReportText() {
     var r = lastReport;
     var lines = [
@@ -902,6 +977,17 @@
     if (Math.abs(d20) <= 0.2) lines.push('→ You are at this target');
     else if (d20 > 0) lines.push('→ Reduce ' + fmt1(d20) + ' ' + weightUnit + ' to reach this lean target');
     else lines.push('→ You are below this target');
+    var p = adviceWeightParts();
+    lines.push('');
+    lines.push('*Lifestyle advice for snoring:*');
+    lines.push('1. Sleep on your side — keep a pillow behind your back');
+    lines.push('2. Stop smoking; avoid alcohol, especially within 3 hours of bedtime');
+    lines.push('3. Finish dinner 3 hours before sleep — keep it your lightest meal');
+    lines.push('4. Exercise 45 minutes daily');
+    lines.push('5. Avoid sleeping pills or sedatives unless your doctor has reviewed your snoring');
+    lines.push('6. ' + (p.amount ? p.amount + p.rest : p.rest));
+    lines.push('');
+    lines.push('A sleep study is advised to check for sleep apnea — it decides the right treatment.');
     lines.push('');
     lines.push('BMI is a screening tool, not a diagnosis.');
     lines.push('');
